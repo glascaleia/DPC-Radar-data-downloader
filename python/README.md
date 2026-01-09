@@ -2,7 +2,7 @@
 # RADAR-DPC – Client Python per download continuo dei prodotti radar (RAW)
 
 Questo documento descrive **cosa fa**, **come installarlo** e **come usarlo** il client Python che
-riceve notifiche in tempo reale via **STOMP/WebSocket** e scarica i prodotti radar tramite **URL presigned**.
+riceve notifiche in tempo reale via **WebSocket** e scarica i prodotti radar tramite **URL presigned**.
 È pensato per **centri meteo** e **istituti di ricerca** che desiderano alimentare pipeline di
 **nowcasting**, **archiviazione** o **post-processing** con i dati raw (GeoTIFF).
 
@@ -13,9 +13,8 @@ riceve notifiche in tempo reale via **STOMP/WebSocket** e scarica i prodotti rad
 ## 1) Architettura in breve
 
 ```
-Broker STOMP (WebSocket)
-   wss://websocket.geosdi.org/wide-websocket
-               │  topic: /topic/product
+(WebSocket)
+   wss://radar-wss.protezionecivile.it
                ▼  messaggi: {"productType":"VMI","time":1758794400000,"period":"PT5M"}
         [Client Python]
                │  per i tipi desiderati invia:
@@ -31,7 +30,6 @@ Broker STOMP (WebSocket)
 
 Caratteristiche principali:
 - **Filtro prodotti** configurabile (es. `VMI,SRI,SRT1,TEMP,...`).
-- **Auto-reconnect** robusto, **heart-beat STOMP** e deduplicazione degli eventi (finestra 3h).
 - **Download in parallelo** (worker pool) e ripresa idempotente (saltiamo file già presenti).
 - **Percorsi sicuri**: la `key` S3 viene sanificata e le directory create automaticamente.
 
@@ -41,8 +39,8 @@ Caratteristiche principali:
 
 - Python 3.9+ (consigliato 3.10/3.11)
 - Accesso in uscita verso:
-  - `wss://websocket.geosdi.org/wide-websocket`
-  - `https://wagiqofvnk.execute-api.eu-south-1.amazonaws.com/prod/downloadProduct`
+  - `wss://radar-wss.protezionecivile.it`
+  - `https://radar-api-v2.protezionecivile.it/downloadProduct`
 - Spazio su disco adeguato (GeoTIFF ~0.5 MB ciascuno in media)
 - Facoltativo: systemd (Linux) o Docker per esecuzione come servizio
 
@@ -85,9 +83,8 @@ python radar_downloader.py --products VMI,SRI,TEMP --output ./downloads --log-le
 
 ### Variabili d’ambiente equivalenti (opzionali)
 
-- `RADAR_WS_URL` (default `wss://websocket.geosdi.org/wide-websocket`)
-- `RADAR_WS_TOPIC` (default `/topic/product`)
-- `RADAR_API_ENDPOINT` (default `https://wagiqofvnk.execute-api.eu-south-1.amazonaws.com/prod/downloadProduct`)
+- `RADAR_WS_URL` (default `wss://radar-wss.protezionecivile.it`)
+- `RADAR_API_ENDPOINT` (default `https://radar-api-v2.protezionecivile.it/downloadProduct`)
 - `RADAR_PRODUCTS` (default `VMI,SRI,TEMP`)
 - `RADAR_OUTPUT_DIR` (default `./downloads`)
 
@@ -102,23 +99,21 @@ python radar_downloader.py
 
 ## 5) Flusso operativo
 
-1. **Connessione WebSocket** al broker con **subprotocollo `v12.stomp`** e heart-beat STOMP abilitato.
-2. **Sottoscrizione** al topic `/topic/product`.
-3. **Ricezione evento** (JSON): `{"productType":"VMI","time":<epoch_ms>,"period":"PT5M"}`.
-4. Se `productType` è nella lista ammessa, il client invia `POST` al servizio `downloadProduct` con:
+1. **Connessione WebSocket**
+2. **Ricezione evento** (JSON): `{"productType":"VMI","time":<epoch_ms>,"period":"PT5M"}`.
+3. Se `productType` è nella lista ammessa, il client invia `POST` al servizio `downloadProduct` con:
    ```json
    {"productType":"VMI","productDate":1758794400000}
    ```
-5. Il servizio risponde con:
+4. Il servizio risponde con:
    ```json
    {"bucket":"dpc-radar","key":"VMI/22-09-2025-11-40.tif","url":"<presigned-url>","expiresSeconds":300}
    ```
-6. Il client **scarica** dal `url` e **salva** il file in `OUTPUT_DIR/<key>`. Se il file esiste già con size>0, lo **salta**.
+5. Il client **scarica** dal `url` e **salva** il file in `OUTPUT_DIR/<key>`. Se il file esiste già con size>0, lo **salta**.
 
 Note:
 - La **deduplicazione** evita doppio download dello stesso (productType, timestamp).
 - I **worker paralleli** accelerano il throughput senza sovraccaricare la rete.
-- Gli **heart-beat STOMP** (newline `\n`) tengono viva la sessione; i ping WebSocket della libreria sono disattivati per evitare conflitti.
 
 ---
 
@@ -199,18 +194,7 @@ docker run --name radar -e RADAR_PRODUCTS="VMI,SRI,SRT1" -v /data/radar:/data --
 
 ---
 
-## 10) Troubleshooting
-
-- **Chiusure WebSocket `code=1002`**: già mitigato forzando `v12.stomp`, header `Origin` e heartbeat STOMP.
-  - Verifica firewall/proxy (TLS inspection può rompere il subprotocol).
-- **Download fallito**: controlla che l’URL presigned non sia scaduta (latenza tra evento e download).
-- **Nessun file scaricato**: verifica `--products`/`RADAR_PRODUCTS` e il log degli eventi in arrivo.
-- **Molti eventi duplicati**: è normale che il broker ritrasmetta; la dedup interna li ignora.
-- **Spazio su disco**: ruota o archivia i dati regolarmente (es. `logrotate`, spostamento su NAS/S3).
-
----
-
-## 11) Performance tuning
+## 10) Performance tuning
 
 - Aumenta `--workers` se la banda lo consente.
 - Usa filesystem locali veloci per la directory `OUTPUT_DIR`.
@@ -218,10 +202,11 @@ docker run --name radar -e RADAR_PRODUCTS="VMI,SRI,SRT1" -v /data/radar:/data --
 
 ---
 
-## 12) Licenza & contatti
+## 11) Licenza & contatti
 
-Questo client è fornito “as is”. Adattalo al tuo ambiente operativo e alle policy del tuo ente.
+Questo client è fornito con licenza CC-BY-SA. Adattalo al tuo ambiente operativo e alle policy del tuo ente.
 Per supporto o feature aggiuntive, contatta i maintainer del progetto.
+Lab GEOSDI CNR IMAA
 
 ---
 
