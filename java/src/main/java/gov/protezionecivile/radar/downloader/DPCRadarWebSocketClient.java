@@ -335,7 +335,9 @@ public class DPCRadarWebSocketClient implements InitializingBean, DisposableBean
             webSocketContainer.setDefaultMaxTextMessageBufferSize(1024 * 1024);
             StandardWebSocketClient webSocketClient = new StandardWebSocketClient(webSocketContainer);
             webSocketClient.setTaskExecutor(this.taskExecutor);
-            this.webSocketSession = webSocketClient.execute(this.dpcRadarTextWebSocketHandler, new WebSocketHttpHeaders(), URI.create(RADAR_WEBSOCKET_URL)).get();
+            WebSocketHttpHeaders headers = new WebSocketHttpHeaders();
+            headers.add("User-Agent", "Java Client");
+            this.webSocketSession = webSocketClient.execute(this.dpcRadarTextWebSocketHandler, headers, URI.create(RADAR_WEBSOCKET_URL)).get();
         } else {
             logger.info("#####################DPCRadarWebSocketClient is connected another error occured.");
         }
@@ -375,7 +377,9 @@ public class DPCRadarWebSocketClient implements InitializingBean, DisposableBean
             webSocketContainer.setDefaultMaxTextMessageBufferSize(1024 * 1024);
             StandardWebSocketClient webSocketClient = new StandardWebSocketClient(webSocketContainer);
             webSocketClient.setTaskExecutor(this.taskExecutor);
-            this.webSocketSession = webSocketClient.execute(this.dpcRadarTextWebSocketHandler, new WebSocketHttpHeaders(), URI.create(RADAR_WEBSOCKET_URL)).get();
+            WebSocketHttpHeaders headers = new WebSocketHttpHeaders();
+            headers.add("User-Agent", "Java Client");
+            this.webSocketSession = webSocketClient.execute(this.dpcRadarTextWebSocketHandler, headers, URI.create(RADAR_WEBSOCKET_URL)).get();
             this.dpcRadarTextWebSocketHandler.injectStompClient(this);
             logger.info("#################Connected to Radar-DPC websocket ... waiting for messages");
         } else {

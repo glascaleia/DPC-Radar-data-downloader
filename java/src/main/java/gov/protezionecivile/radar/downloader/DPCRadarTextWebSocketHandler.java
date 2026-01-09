@@ -318,7 +318,7 @@ public class DPCRadarTextWebSocketHandler extends TextWebSocketHandler implement
     public String productToDownload;
     @Value("${defaultSavePath}")
     public String defaultSavePath;
-    private final String DOWNLOAD_PRODUCT_URL = "https://wagiqofvnk.execute-api.eu-south-1.amazonaws.com/prod/downloadProduct";
+    private final String DOWNLOAD_PRODUCT_URL = "https://radar-api-v2.protezionecivile.it/downloadProduct";
     private final ObjectMapper mapper = new ObjectMapper();
     private DPCRadarWebSocketClient webSocketClient;
 

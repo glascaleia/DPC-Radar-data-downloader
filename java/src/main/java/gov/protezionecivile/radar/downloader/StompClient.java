@@ -303,7 +303,7 @@ public class StompClient {
 
     private static final Logger logger = LogManager.getLogger(StompClient.class);
     //
-    protected static String RADAR_WEBSOCKET_URL = "wss://7ju75f7wai.execute-api.eu-south-1.amazonaws.com/Prod";
+    protected static String RADAR_WEBSOCKET_URL = "wss://radar-wss.protezionecivile.it";
 
     @Autowired
     @Qualifier(value = "dpcSessionHandler")
