@@ -277,6 +277,7 @@
 
 package gov.protezionecivile.radar.downloader;
 
+import jakarta.annotation.PostConstruct;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -286,12 +287,12 @@ import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Component;
-import org.springframework.util.concurrent.ListenableFuture;
 import org.springframework.web.socket.client.WebSocketClient;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 
-import javax.annotation.PostConstruct;
+import java.util.concurrent.CompletableFuture;
+
 
 /**
  * @author Francesco Izzi @ CNR IMAA geoSDI
@@ -302,7 +303,7 @@ public class StompClient {
 
     private static final Logger logger = LogManager.getLogger(StompClient.class);
     //
-    protected static String RADAR_WEBSOCKET_URL = "wss://7ju75f7wai.execute-api.eu-south-1.amazonaws.com/Prod";
+    protected static String RADAR_WEBSOCKET_URL = "wss://radar-wss.protezionecivile.it";
 
     @Autowired
     @Qualifier(value = "dpcSessionHandler")
@@ -322,14 +323,14 @@ public class StompClient {
         ThreadPoolTaskScheduler taskScheduler = new ThreadPoolTaskScheduler();
         taskScheduler.afterPropertiesSet();
         stompClient.setTaskScheduler(taskScheduler);
-        this.session = stompClient.connect(RADAR_WEBSOCKET_URL, this.stompSessionHandler).get();
+        this.session = stompClient.connectAsync(RADAR_WEBSOCKET_URL, this.stompSessionHandler).get();
         this.stompSessionHandler.injectStompClient(this);
     }
 
     void reconnect() throws Exception {
         if (!this.session.isConnected()) {
             logger.info("################################Trying to reconnect");
-            ListenableFuture<StompSession> stompSessionFuture = this.stompClient.connect(RADAR_WEBSOCKET_URL, this.stompSessionHandler);
+            CompletableFuture<StompSession> stompSessionFuture = this.stompClient.connectAsync(RADAR_WEBSOCKET_URL, this.stompSessionHandler);
             this.session = stompSessionFuture.get();
         } else {
             logger.info("#####################StompClient is connected another error occured.");
