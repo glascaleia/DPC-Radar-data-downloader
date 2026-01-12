@@ -37,7 +37,7 @@ WS_ORIGIN_DEFAULT = os.getenv("RADAR_WS_ORIGIN", "https://radar.protezionecivile
 
 API_ENDPOINT_DEFAULT = os.getenv(
     "RADAR_API_ENDPOINT",
-    "https://radar-api-v2.protezionecivile.it/downloadProduct"
+    "https://radar-api.protezionecivile.it/downloadProduct"
 )
 PRODUCTS_DEFAULT = os.getenv("RADAR_PRODUCTS", "VMI,SRI,TEMP")
 OUTPUT_DIR_DEFAULT = os.getenv("RADAR_OUTPUT_DIR", "./downloads")
