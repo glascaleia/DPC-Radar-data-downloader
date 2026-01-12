@@ -40,7 +40,7 @@ Caratteristiche principali:
 - Python 3.9+ (consigliato 3.10/3.11)
 - Accesso in uscita verso:
   - `wss://radar-wss.protezionecivile.it`
-  - `https://radar-api-v2.protezionecivile.it/downloadProduct`
+  - `https://radar-api.protezionecivile.it/downloadProduct`
 - Spazio su disco adeguato (GeoTIFF ~0.5 MB ciascuno in media)
 - Facoltativo: systemd (Linux) o Docker per esecuzione come servizio
 
@@ -84,7 +84,7 @@ python radar_downloader.py --products VMI,SRI,TEMP --output ./downloads --log-le
 ### Variabili d’ambiente equivalenti (opzionali)
 
 - `RADAR_WS_URL` (default `wss://radar-wss.protezionecivile.it`)
-- `RADAR_API_ENDPOINT` (default `https://radar-api-v2.protezionecivile.it/downloadProduct`)
+- `RADAR_API_ENDPOINT` (default `https://radar-api.protezionecivile.it/downloadProduct`)
 - `RADAR_PRODUCTS` (default `VMI,SRI,TEMP`)
 - `RADAR_OUTPUT_DIR` (default `./downloads`)
 
